@@ -15,6 +15,9 @@ PADDING_LETTERS = string.ascii_letters+string.digits+string.punctuation
 PADDING_MIN     = 5
 PADDING_MAX     = 20
 
+GOOGLE_INET4 = [ "8.8.8.8", "8.8.4.4" ]
+GOOGLE_INET6 = [ "2001:4860:4860::8888", "2001:4860:4860::8844" ]
+
 
 class GoogleDNSResolver(aiohttp.abc.AbstractResolver):
 
@@ -22,19 +25,16 @@ class GoogleDNSResolver(aiohttp.abc.AbstractResolver):
 		# family
 		if family==socket.AF_UNSPEC: family = socket.AF_INET
 		# dns.google
-		if host=="dns.google":
-			if family==socket.AF_INET: return [
-				{"hostname": host, "host": "8.8.8.8", "port": port, "family": family,
-					"flags": socket.AI_NUMERICHOST, "proto": socket.IPPROTO_IP},
-				{"hostname": host, "host": "8.8.4.4", "port": port, "family": family,
-					"flags": socket.AI_NUMERICHOST, "proto": socket.IPPROTO_IP}
-			]
-			elif family==socket.AF_INET6: return [
-				{"hostname": host, "host": "2001:4860:4860::8888", "port": port, "family": family,
-					"flags": socket.AI_NUMERICHOST, "proto": socket.IPPROTO_IP},
-				{"hostname": host, "host": "2001:4860:4860::8844", "port": port, "family": family,
-					"flags": socket.AI_NUMERICHOST, "proto": socket.IPPROTO_IP}
-			]
+		if host=="dns.google" and family in {socket.AF_INET, socket.AF_INET6}: return [
+			{
+				"hostname": host,
+				"host"    : x,
+				"port"    : port,
+				"family"  : family,
+				"flags"   : socket.AI_NUMERICHOST,
+				"proto"   : socket.IPPROTO_IP
+			} for x in (GOOGLE_INET4 if family==socket.AF_INET else GOOGLE_INET6)
+		]
 		# Хост не найден
 		return list()
 
