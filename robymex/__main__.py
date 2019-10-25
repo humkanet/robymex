@@ -55,7 +55,6 @@ async def main():
 		help="Candle period in seconds (default=%(default)s)"
 	)
 	args = parser.parse_args()
-	print(args)
 	# Настриваем журнал
 	logging.config.dictConfig(LOGGING)
 	# Обработка сделок/свечей

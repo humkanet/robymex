@@ -84,7 +84,6 @@ class WebsocketConnector:
 
 
 	async def __task_writer(self, ws:websockets.WebSocketClientProtocol)->None:
-		print(dir(ws))
 		self.logger.debug("[writer] Started")
 		while not ws.closed:
 			# Ждем сообщение
