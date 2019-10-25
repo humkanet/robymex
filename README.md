@@ -5,6 +5,7 @@ WebSocket connector for some crypto-exchanges
 - Connector for Binance, Okex
 - Build candles with specified period
 - Log trades and candles
+- Asynchronous DNS resolver (Google DNS-over-HTTPS)
 
 ### Usage
 
