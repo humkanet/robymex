@@ -73,10 +73,7 @@ class GoogleDOHResolver(aiohttp.abc.AbstractResolver):
 			"type": qtype,
 			"random_padding": "".join(padding)
 		}
-		async with self.__session.get(
-			"https://dns.google/resolve",
-			params = params
-		) as r:
+		async with self.__session.get("https://dns.google/resolve", params=params) as r:
 			answer = await r.json(loads=json.loads, content_type=None)
 		# Формируем список хостов
 		if answer["Status"]==0:
