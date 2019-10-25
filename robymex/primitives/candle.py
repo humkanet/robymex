@@ -26,8 +26,8 @@ class Candle:
 		self.__close  : Optional[Decimal] = None
 		self.__high   : Optional[Decimal] = None
 		self.__low    : Optional[Decimal] = None
-		self.__buy    = 0
-		self.__sell   = 0
+		self.__buy    : Decimal = Decimal(0)
+		self.__sell   : Decimal = Decimal(0)
 		self.__period = period
 
 
@@ -39,8 +39,8 @@ class Candle:
 				self.__close = trade.price
 				self.__low   = trade.price
 				self.__high  = trade.price
-				self.__buy   = 0
-				self.__sell  = 0
+				self.__buy   = Decimal(0)
+				self.__sell  = Decimal(0)
 			else:
 				# Обрабатываем цену
 				self.__close = trade.price

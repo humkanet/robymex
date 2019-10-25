@@ -1,4 +1,4 @@
-from typing      import List, Awaitable, Optional
+from typing      import Dict, List, Awaitable, Optional
 from .helpers    import wait_first
 from .primitives import Trade, Ticker, Candle
 from .connectors import WebsocketConnector
@@ -23,10 +23,10 @@ class Worker:
 
 	@property
 	def redis(self)->bool:
-		return self.__redis is not None
+		return hasattr(self, "__redis")
 
 	@property
-	def logger(self)->logging.Logger:
+	def logger(self)->logging.LoggerAdapter:
 		return self.__logger
 
 	def __init__(self,
@@ -39,7 +39,7 @@ class Worker:
 		self.__estop        = asyncio.Event()
 		self.__tasks        :List[Awaitable] = []
 		self.__connectors   :List[WebsocketConnector] = []
-		self.__candles      = {}
+		self.__candles      :Dict[str,Candle] = {}
 		self.__period       = period
 		self.__show_trades  = show_trades
 		self.__show_candles = show_candles
@@ -82,7 +82,7 @@ class Worker:
 #			await redis.publish(channel, str(trade))
 
 
-	async def __task_candle_receiver(self, name:str, queue:str)->None:
+	async def __task_candle_receiver(self, name:str, queue:asyncio.Queue)->None:
 		# Обрабатываем свечи
 		while not self.__estop.is_set():
 			# Ждем сделку
@@ -115,8 +115,8 @@ class Worker:
 		# Журнал
 		self.logger.info(f"Run connector <{connector.name}> ...")
 		# Запускаем коннектор и обработку сделок
-		qtrade  = asyncio.Queue()
-		qcandle = asyncio.Queue()
+		qtrade  :asyncio.Queue = asyncio.Queue()
+		qcandle :asyncio.Queue = asyncio.Queue()
 		self.__tasks += [
 			asyncio.create_task(connector.start(qtrade)),
 			asyncio.create_task(self.__task_trade_receiver(connector.name, qtrade, qcandle)),

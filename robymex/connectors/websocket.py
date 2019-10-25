@@ -20,7 +20,7 @@ class WebsocketConnector:
 		return self.__name
 
 	@property
-	def logger(self)->logging.Logger:
+	def logger(self)->logging.LoggerAdapter:
 		return self.__logger
 
 	@property
@@ -41,8 +41,8 @@ class WebsocketConnector:
 		self.__symbols:Dict[str,Symbol] = {}
 		self.__trades :Set[str] = set()
 		self.__name   = name
-		self.__estop  = asyncio.Event()
-		self.__qsend  = asyncio.Queue()
+		self.__estop  :asyncio.Event = asyncio.Event()
+		self.__qsend  :asyncio.Queue = asyncio.Queue()
 		self.__reconnect_timeout = reconnect_timeout
 		self.__logger = logging.LoggerAdapter(
 			logger=logging.getLogger("module"),
@@ -56,7 +56,7 @@ class WebsocketConnector:
 		pass
 
 
-	async def on_recv(self, msg:str, queue:asyncio.Queue)->None:
+	async def on_recv(self, msg:bytes, queue:asyncio.Queue)->None:
 		pass
 
 
@@ -105,7 +105,7 @@ class WebsocketConnector:
 		self.__estop.clear()
 		# Пока не включен флаг остановки
 		while not self.__estop.is_set():
-			tasks = []
+			tasks :List[Awaitable] = []
 			try:
 				# Подключаемся к websocket
 				async with websockets.connect(self.uri, close_timeout=CLOSE_TIMEOUT) as ws:

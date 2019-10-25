@@ -7,7 +7,7 @@ import aiohttp
 try:
 	import ujson as json
 except ModuleNotFoundError:
-	import json
+	import json # type: ignore
 
 
 class HttpConnector:

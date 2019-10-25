@@ -10,7 +10,7 @@ import websockets
 try:
 	import ujson as json
 except ModuleNotFoundError:
-	import json
+	import json # type: ignore
 
 
 HTTP_ENDPOINT = "https://api.binance.com/api/v3"
@@ -25,7 +25,7 @@ class BinanceConnector(WebsocketConnector, HttpConnector):
 		HttpConnector.__init__(self)
 
 
-	async def on_recv(self, msg:str, queue:asyncio.Queue)->None:
+	async def on_recv(self, msg:bytes, queue:asyncio.Queue)->None:
 		# Разбираем сообщение
 		args = json.loads(msg)
 		# Обрабатываем сделку (trade)

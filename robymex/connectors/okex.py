@@ -12,7 +12,7 @@ import zlib
 try:
 	import ujson as json
 except ModuleNotFoundError:
-	import json
+	import json # type: ignore
 
 
 HTTP_ENDPOINT = "https://www.okex.com"
@@ -30,7 +30,7 @@ class OkexConnector(WebsocketConnector, HttpConnector):
 		HttpConnector.__init__(self, headers=HEADERS)
 
 
-	async def on_recv(self, msg:str, queue:asyncio.Queue)->None:
+	async def on_recv(self, msg:bytes, queue:asyncio.Queue)->None:
 		# Распаковываем сообщение
 		data = zlib.decompress(msg, -zlib.MAX_WBITS)
 		args = json.loads(data)
@@ -61,7 +61,7 @@ class OkexConnector(WebsocketConnector, HttpConnector):
 
 	async def on_connect(self)->None:
 		# Подписываемся на сделки по всем инструментам
-		await self.subscribe(self.symbols.keys())
+		await self.subscribe(list(self.symbols.keys()))
 
 
 	async def start(self, queue:asyncio.Queue)->None:

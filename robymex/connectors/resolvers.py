@@ -8,7 +8,7 @@ import random
 try:
 	import ujson as json
 except ModuleNotFoundError:
-	import json
+	import json # type: ignore
 
 
 PADDING_LETTERS = string.ascii_letters+string.digits+string.punctuation
@@ -21,7 +21,7 @@ GOOGLE_INET6 = [ "2001:4860:4860::8888", "2001:4860:4860::8844" ]
 
 class GoogleDNSResolver(aiohttp.abc.AbstractResolver):
 
-	async def resolve(self, host:str, port:0, family:int=socket.AF_INET)->List[Dict[str,Any]]:
+	async def resolve(self, host:str, port:int=0, family:int=socket.AF_INET)->List[Dict[str,Any]]:
 		# family
 		if family==socket.AF_UNSPEC: family = socket.AF_INET
 		# dns.google
@@ -57,7 +57,7 @@ class GoogleDOHResolver(aiohttp.abc.AbstractResolver):
 			json_serialize  = json.dumps,
 		)
 
-	async def resolve(self, host:str, port:0, family:int=socket.AF_INET)->List[Dict[str,Any]]:
+	async def resolve(self, host:str, port:int=0, family:int=socket.AF_INET)->List[Dict[str,Any]]:
 		# inet4/inet6
 		if family in {socket.AF_INET, socket.AF_UNSPEC}: qtype = 1
 		elif family==socket.AF_INET6: qtype = 28
