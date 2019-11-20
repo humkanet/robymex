@@ -5,6 +5,7 @@ import signal
 import logging.config
 import aioredis
 import argparse
+import time
 
 
 LOGGING = {
@@ -12,7 +13,7 @@ LOGGING = {
 
 	"formatters": {
 		"console": {
-			"format" : "[{asctime}, {module-name}, {levelname}] {message}",
+			"format" : "[{asctime}, {modulename}, {levelname}] {message}",
 			"datefmt": "%d.%m.%Y %H:%M:%S",
 			"style"  : "{"
 		}
@@ -54,6 +55,10 @@ async def main():
 		"-p", "--period", type=int, default=5,
 		help="Candle period in seconds (default=%(default)s)"
 	)
+	parser.add_argument(
+		"--perf", type=int, default=0,
+		help="Perfomance counter interval, 0 for disable (default=%(default)s)"
+	)
 	args = parser.parse_args()
 	# Настриваем журнал
 	logging.config.dictConfig(LOGGING)
@@ -61,10 +66,11 @@ async def main():
 	worker = Worker(
 		show_trades  = args.show_trades,
 		show_candles = args.show_candles,
-		period       = args.period
+		period       = args.period,
+		perfomance   = args.perf
 	)
 	# Перехиватываем SIGINT/SIGTERM для остановки коннекторов
-	loop  = asyncio.get_running_loop()
+	loop = asyncio.get_running_loop()
 	def stop():
 		# Убираем обработку сигналов
 		for sig in [ signal.SIGINT, signal.SIGTERM ]:
@@ -84,6 +90,7 @@ async def main():
 	for x in args.exchange:
 		if   x=="binance": tasks.append(worker.run(BinanceConnector()))
 		elif x=="okex"   : tasks.append(worker.run(OkexConnector()))
+	# Ждем завершения работы
 	await asyncio.gather(*tasks)
 
 

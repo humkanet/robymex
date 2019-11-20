@@ -1,20 +1,17 @@
-from typing  import Union
-from decimal import Decimal
+from dataclasses import dataclass, field
+from typing      import Union
+from decimal     import Decimal
 
+
+@dataclass(frozen=True)
 class Symbol:
 
-	@property
-	def name(self)->str:
-		return self.__name
-
-	@property
-	def step(self)->Decimal:
-		return self.__step
+	name: str
+	step: Decimal
 
 
-	def __init__(self, name:str, step:Union[float,Decimal,str])->None:
-		self.__name = name
-		self.__step = Decimal(step)
+	def __post_init__(self):
+		object.__setattr__(self, "step", Decimal(self.step))
 
 
 	def quantize(self, value:Union[float,Decimal,str])->Decimal:

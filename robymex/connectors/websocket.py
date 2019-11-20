@@ -47,7 +47,7 @@ class WebsocketConnector:
 		self.__logger = logging.LoggerAdapter(
 			logger=logging.getLogger("module"),
 			extra={
-				"module-name": self.name
+				"modulename": name
 			}
 		)
 
@@ -130,6 +130,7 @@ class WebsocketConnector:
 				break
 			# Ждем завершения задач
 			finally:
+				# Закрываем подключение
 				if len(tasks)>0:
 					await asyncio.gather(*tasks)
 		# Журнал
@@ -138,6 +139,7 @@ class WebsocketConnector:
 
 	def stop(self)->None:
 		self.__estop.set()
+		self.logger.info("Stop ...")
 
 
 	async def send(self, msg:str)->None:

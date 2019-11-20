@@ -44,8 +44,8 @@ class Candle:
 			else:
 				# Обрабатываем цену
 				self.__close = trade.price
-				if   trade.price>self.__high: self.__high = trade.price
-				elif trade.price<self.__low : self.__low  = trade.price
+				if   trade.price>self.__high: self.__high = trade.price # type: ignore
+				elif trade.price<self.__low : self.__low  = trade.price # type: ignore
 				# Обрабатываем объем
 				if   trade.side==Side.BUY : self.__buy  += trade.size
 				elif trade.side==Side.SELL: self.__sell += trade.size

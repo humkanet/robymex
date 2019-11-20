@@ -71,9 +71,7 @@ class OkexConnector(WebsocketConnector, HttpConnector):
 		await super().start(queue)
 
 
-
 	async def _load_symbols(self)->List[Symbol]:
-		symbols :List[Symbol] = []
 		async with self._http.get(f"{HTTP_ENDPOINT}/api/spot/v3/instruments") as r:
 			data = await r.json(loads=json.loads)
 		return [ Symbol(name=s["instrument_id"], step=s["tick_size"]) for s in data ]

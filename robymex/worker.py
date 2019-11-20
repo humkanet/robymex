@@ -1,10 +1,67 @@
-from typing      import Dict, List, Awaitable, Optional
+from typing      import Dict, List, Awaitable, Optional, Tuple
 from .helpers    import wait_first
-from .primitives import Trade, Ticker, Candle
+from .primitives import Trade, Ticker, Candle, Symbol
 from .connectors import WebsocketConnector
 import logging
 import asyncio
 import aioredis
+
+
+class Perfomance:
+
+	@property
+	def period(self)->int:
+		return self.__period
+
+	@property
+	def logger(self)->logging.LoggerAdapter:
+		return self.__logger
+
+	def __init__(self, period:int=1)->None:
+		self.__lock   = asyncio.Lock()
+		self.__lock1  = asyncio.Lock()
+		self.__lock2  = asyncio.Lock()
+		self.__estop  = asyncio.Event()
+		self.__period = period
+		self.__metrics :Dict[str, List[asyncio.Lock, int]] = {}
+		self.__logger = logging.LoggerAdapter(
+			logger=logging.getLogger("module"),
+			extra={
+				"modulename": "perfomance"
+			}
+		)
+
+	async def add(self, metric:str, inc:int=1)->int:
+		async with self.__lock:
+			m = self.__metrics.get(metric)
+			if not m:
+				m = self.__metrics[metric] = [ asyncio.Lock(), 0 ]
+		async with m[0]:
+			m[1] += inc
+			return m[1]
+
+	async def start(self)->None:
+		self.logger.info("Start ...")
+		self.__estop.clear()
+		while not self.__estop.is_set():
+			flag,_ = await wait_first([
+				asyncio.sleep(self.period),
+				self.__estop.wait()
+			])
+			if not flag: break
+			metrics :List[Tuple[str,int]] = []
+			async with self.__lock:
+				for k, v in self.__metrics.items():
+					async with v[0]:
+						metrics.append((k, v[1]))
+						v[1] = 0
+			if metrics:
+				txt = ", ".join([ f"{x[0]}: {x[1]:5}" for x in metrics])
+				self.logger.debug(f"Metrics, {txt}")
+		self.logger.info("Stopped")
+
+	def stop(self)->None:
+		self.__estop.set()
 
 
 class Worker:
@@ -33,7 +90,8 @@ class Worker:
 		show_trades :bool=False,
 		show_candles:bool=False,
 		redis_uri   :Optional[str]=None,
-		period      :int=5
+		period      :int=5,
+		perfomance  :Optional[int]=None
 	)->None:
 		self.__lock         = asyncio.Lock()
 		self.__estop        = asyncio.Event()
@@ -43,14 +101,13 @@ class Worker:
 		self.__period       = period
 		self.__show_trades  = show_trades
 		self.__show_candles = show_candles
+		self.__perfomance   = Perfomance(perfomance) if perfomance else None
 		self.__logger  = logging.LoggerAdapter(
 			logger=logging.getLogger("module"),
 			extra={
-				"module-name": f"worker"
+				"modulename": "worker"
 			}
 		)
-		self.__lock_candles = asyncio.Lock()
-
 
 	async def __task_trade_receiver(self,
 		name   :str,
@@ -75,6 +132,9 @@ class Worker:
 						asyncio.create_task(candle.start(qcandle))
 					)
 			await candle.update(trade)
+			# Сбор статистики
+			if self.__perfomance:
+				await self.__perfomance.add("trades")
 			# Показываем сделку
 			if self.show_trades: self.logger.info(f"Trade <{name}>: {trade}")
 			# Отправляем в redis
@@ -91,6 +151,8 @@ class Worker:
 				self.__estop.wait()
 			])
 			if not flag: break
+			# Сбор статистики
+			if self.__perfomance: await self.__perfomance.add("candles")
 			# Журнал
 			if self.show_candles: self.logger.info(f"Candle <{name}>: {ticker}")
 
@@ -99,8 +161,14 @@ class Worker:
 	async def start(self)->None:
 		# Сбрасываем флаг остановки
 		self.__estop.clear()
+		# Запускаем сбор статистики
+		if self.__perfomance: self.__tasks.append(
+			asyncio.create_task(self.__perfomance.start())
+		)
 		# Ждем сигнала остановки
 		await self.__estop.wait()
+		# Останавливаем сбор статистики
+		if self.__perfomance: self.__perfomance.stop()
 		# Останавливаем коннекторы
 		for connector in self.__connectors:
 			connector.stop()

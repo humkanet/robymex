@@ -1,5 +1,7 @@
-from decimal  import Decimal
-from .symbol  import Symbol
+from dataclasses import dataclass
+from decimal     import Decimal
+from .symbol     import Symbol
+
 
 try:
 	import ujson
@@ -7,53 +9,21 @@ except ModuleNotFoundError:
 	import json
 
 
+@dataclass(frozen=True)
 class Ticker:
 
-	@property
-	def symbol(self)->Symbol:
-		return self.__symbol
-
-	@property
-	def open(self)->Decimal:
-		return self.__open
-
-	@property
-	def close(self)->Decimal:
-		return self.__close
-
-	@property
-	def high(self)->Decimal:
-		return self.__high
-
-	@property
-	def low(self)->Decimal:
-		return self.__low
-
-	@property
-	def buy(self)->Decimal:
-		return self.__buy
-
-	@property
-	def sell(self)->Decimal:
-		return self.__sell
+	symbol: Symbol
+	open  : Decimal
+	close : Decimal
+	high  : Decimal
+	low   : Decimal
+	buy   : Decimal
+	sell  : Decimal
 
 
-	def __init__(self,
-		symbol: Symbol,
-		open  : Decimal,
-		close : Decimal,
-		high  : Decimal,
-		low   : Decimal,
-		buy   : Decimal,
-		sell  : Decimal
-	)->None:
-		self.__symbol = symbol
-		self.__open   = symbol.quantize(open)
-		self.__close  = symbol.quantize(close)
-		self.__high   = symbol.quantize(high)
-		self.__low    = symbol.quantize(low)
-		self.__buy    = buy
-		self.__sell   = sell
+	def __post_init__(self)->None:
+		for x in ("open", "close", "high", "low"):
+			object.__setattr__(self, x, self.symbol.quantize(self.__getattribute__(x)))
 
 
 	def dumps(self)->str:
