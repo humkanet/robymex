@@ -11,11 +11,9 @@ class Side(Enum):
 
 @dataclass(frozen=True)
 class Trade:
+	__slots__ = ("symbol", "size", "side", "price")
+
 	symbol: Symbol
 	size  : Decimal
 	side  : Side
 	price : Decimal
-
-
-	def __str__(self)->str:
-		return f"Trade<symbol={self.symbol.name}, size={self.size}, side={self.side.value}, price={self.price}>"

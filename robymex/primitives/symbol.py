@@ -1,10 +1,11 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing      import Union
 from decimal     import Decimal
 
 
 @dataclass(frozen=True)
 class Symbol:
+	__slots__ = ("name", "step")
 
 	name: str
 	step: Decimal
@@ -16,7 +17,3 @@ class Symbol:
 
 	def quantize(self, value:Union[float,Decimal,str])->Decimal:
 		return Decimal(value).quantize(self.step)
-
-
-	def __str__(self)->str:
-		return f"Symbol<name={self.name}, step={self.step}>"

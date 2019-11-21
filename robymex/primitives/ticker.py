@@ -11,6 +11,7 @@ except ModuleNotFoundError:
 
 @dataclass(frozen=True)
 class Ticker:
+	__slots__ = ("symbol", "open", "close", "high", "low", "buy", "sell")
 
 	symbol: Symbol
 	open  : Decimal

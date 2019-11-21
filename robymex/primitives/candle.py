@@ -1,34 +1,29 @@
-from typing    import Optional
-from .ticker   import Ticker
-from .symbol   import Symbol
-from ..helpers import wait_first
-from .trade    import Trade, Side
-from decimal   import Decimal
+from dataclasses import dataclass
+from typing      import Optional
+from .ticker     import Ticker
+from .symbol     import Symbol
+from ..helpers   import wait_first
+from .trade      import Trade, Side
+from decimal     import Decimal
 import asyncio
 
 
+@dataclass
 class Candle:
 
-	@property
-	def symbol(self)->Symbol:
-		return self.__symbol
-
-	@property
-	def period(self)->int:
-		return self.__period
+	symbol: Symbol
+	period: int
 
 
-	def __init__(self, symbol:Symbol, period:int)->None:
+	def __post_init__(self)->None:
 		self.__lock   = asyncio.Lock()
 		self.__estop  = asyncio.Event()
-		self.__symbol = symbol
 		self.__open   : Optional[Decimal] = None
 		self.__close  : Optional[Decimal] = None
 		self.__high   : Optional[Decimal] = None
 		self.__low    : Optional[Decimal] = None
 		self.__buy    : Decimal = Decimal(0)
 		self.__sell   : Decimal = Decimal(0)
-		self.__period = period
 
 
 	async def update(self, trade:Trade)->None:
@@ -59,7 +54,7 @@ class Candle:
 				self.__open = None
 			# Ждем указанные период
 			flag,_ = await wait_first([
-				asyncio.sleep(self.__period),
+				asyncio.sleep(self.period),
 				self.__estop.wait()
 			])
 			if not flag: break
